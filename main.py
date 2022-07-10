@@ -53,7 +53,13 @@ async def on_message(message):
             embed = discord.Embed(title="Allen MC Server Bot在此！", description="使用`as!help`來取得指令支援。",
                                   color=default_color)
             final_msg_list.append(embed)
-        if parameter == "start":
+        elif parameter == "help":
+            embed = discord.Embed(title="help", description="一隻可以進行Aternos伺服器操作的機器人。", color=default_color)
+            embed.add_field(name="`help`", value="顯示此協助訊息。", inline=False)
+            embed.add_field(name="`start`", value="啟動伺服器。", inline=False)
+            embed.add_field(name="`status`", value="查看伺服器狀態。", inline=False)
+            final_msg_list.append(embed)
+        elif parameter == "start":
             load_dotenv(dotenv_path=os.path.join(base_dir, "SECRET.env"))
             username = os.getenv("ACCOUNTNAME")
             password = os.getenv("PASSWORD")
@@ -73,6 +79,21 @@ async def on_message(message):
                     embed.add_field(name="錯誤", value="(無錯誤訊息)", inline=False)
             else:
                 embed = discord.Embed(title="start", description="伺服器已啟動！請稍微等待伺服器前置工作完成。", color=default_color)
+            final_msg_list.append(embed)
+        elif parameter == "status":
+            load_dotenv(dotenv_path=os.path.join(base_dir, "SECRET.env"))
+            username = os.getenv("ACCOUNTNAME")
+            password = os.getenv("PASSWORD")
+            result = server_action.get_server_status(username, password)
+            if result.startswith("Login failed:"):
+                embed = discord.Embed(title="status", description="無法取得伺服器狀態！請參閱以下錯誤訊息。", color=error_color)
+                error_msg = result[result.find(":") + 1:]
+                embed.add_field(name="登入錯誤", value=error_msg, inline=False)
+            elif result.startswith("Status:"):
+                embed = discord.Embed(title="status", description="伺服器目前狀態：{0}".format(result[result.find(":") + 1:]),
+                                      color=default_color)
+            else:
+                embed = discord.Embed(title="status", description="無法取得伺服器狀態！", color=error_color)
             final_msg_list.append(embed)
         for i in range(len(final_msg_list)):
             current_msg = final_msg_list[i]
