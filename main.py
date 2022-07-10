@@ -18,7 +18,7 @@ async def on_ready():
     await client.change_presence(status=discord.Status.dnd, activity=music)
     log_writter.write_log("-------------------------------------------------------------\n", True)
     log_writter.write_log("\n登入成功！\n目前登入身份：" +
-                          str(client.user) + "\n以下為使用紀錄(只要開頭訊息有\"a!\"，則這則訊息和系統回應皆會被記錄)：\n\n")
+                          str(client.user) + "\n以下為使用紀錄(只要開頭訊息有\"as!\"，則這則訊息和系統回應皆會被記錄)：\n\n")
 
 testing = False
 
@@ -49,28 +49,31 @@ async def on_message(message):
         use_log = str(message.channel) + "/" + str(message.author) + ":\n" + msg_in + "\n\n"
         log_writter.write_log(use_log)
         parameter = msg_in[3:]
+        if parameter == "":
+            embed = discord.Embed(title="Allen MC Server Bot在此！", description="使用`as!help`來取得指令支援。",
+                                  color=default_color)
+            final_msg_list.append(embed)
         if parameter == "start":
             load_dotenv(dotenv_path=os.path.join(base_dir, "SECRET.env"))
-            username = os.getenv("USERNAME")
+            username = os.getenv("ACCOUNTNAME")
             password = os.getenv("PASSWORD")
             result = server_action.start_server(username, password)
-            if not result:
+            if isinstance(result, str):
                 embed = discord.Embed(title="start", description="無法啟動伺服器！請參閱以下錯誤訊息。", color=error_color)
                 if result.startswith("Login failed:"):
-                    error_msg = result[result.find(":"):]
+                    error_msg = result[result.find(":")+1:]
                     embed.add_field(name="登入錯誤", value=error_msg, inline=False)
                 elif result.startswith("Status:"):
-                    error_msg = "伺服器目前狀態({0})，不允許啟動！".format(result[result.find(":"):])
+                    error_msg = "伺服器目前狀態({0})，不允許啟動！".format(result[result.find(":")+1:])
                     embed.add_field(name="啟動錯誤", value=error_msg, inline=False)
                 elif result.startswith("Start failed:"):
-                    error_msg = result[result.find(":"):]
+                    error_msg = result[result.find(":")+1:]
                     embed.add_field(name="啟動錯誤", value=error_msg, inline=False)
                 else:
                     embed.add_field(name="錯誤", value="(無錯誤訊息)", inline=False)
-                final_msg_list.append(embed)
             else:
                 embed = discord.Embed(title="start", description="伺服器已啟動！請稍微等待伺服器前置工作完成。", color=default_color)
-                final_msg_list.append(embed)
+            final_msg_list.append(embed)
         for i in range(len(final_msg_list)):
             current_msg = final_msg_list[i]
             if isinstance(current_msg, discord.File):
